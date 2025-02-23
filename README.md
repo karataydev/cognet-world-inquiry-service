@@ -111,14 +111,5 @@ GET /api/v1/search/concept/{id}
 
 Feel free to open issues and submit PRs.
 
-## 📄 License
-
-MIT
-
-## ✨ Acknowledgments
-
-- Thanks to the Cognate dataset creators
-- Built with ❤️ for language lovers
-
 ---
 Made with 🎉 and Go
