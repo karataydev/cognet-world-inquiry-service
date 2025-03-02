@@ -113,3 +113,5 @@ Feel free to open issues and submit PRs.
 
 ---
 Made with 🎉 and Go
+
+v2
