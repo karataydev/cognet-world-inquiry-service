@@ -96,6 +96,7 @@ func setupRoutes(app *fiber.App, importHandler *handler.ImportHandler, cognateHa
 	// Import routes
 	importRoutes := api.Group("/import")
 	importRoutes.Post("/tsv", importHandler.ImportTSV)
+	importRoutes.Post("/languages", importHandler.ImportLanguages)
 	importRoutes.Get("/status", importHandler.GetStatus)
 	importRoutes.Delete("/clear", importHandler.ClearDatabase)
 
@@ -103,6 +104,8 @@ func setupRoutes(app *fiber.App, importHandler *handler.ImportHandler, cognateHa
 	searchRoutes := api.Group("/search")
 	searchRoutes.Get("/suggestions", cognateHandler.GetSuggestions)
 	searchRoutes.Get("/concept/:id", cognateHandler.GetByConceptID)
+	searchRoutes.Get("/chains/concept/:id", cognateHandler.FindCognateChains)
+
 }
 
 func init() {

@@ -56,6 +56,39 @@ func (h *ImportHandler) GetStatus(c *fiber.Ctx) error {
 	})
 }
 
+func (h *ImportHandler) ImportLanguages(c *fiber.Ctx) error {
+	// Get the file from form data
+	file, err := c.FormFile("file")
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "No file uploaded: " + err.Error(),
+		})
+	}
+
+	// Open the uploaded file
+	uploadedFile, err := file.Open()
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to open uploaded file: " + err.Error(),
+		})
+	}
+	defer uploadedFile.Close()
+
+	// Use a buffered reader
+	reader := bufio.NewReader(uploadedFile)
+
+	// Start the import process
+	if err := h.dataImporter.ImportLanguages(c.Context(), reader); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "Languages imported successfully",
+	})
+}
+
 func (h *ImportHandler) ClearDatabase(c *fiber.Ctx) error {
 	if err := h.dataImporter.ClearDatabase(c.Context()); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{

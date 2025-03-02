@@ -7,53 +7,77 @@ import (
 )
 
 type CognateHandler struct {
-    cognateSearch service.CognateSearch
+	cognateSearch service.CognateSearch
 }
 
 func NewCognateHandler(cognateSearch service.CognateSearch) *CognateHandler {
-    return &CognateHandler{
-        cognateSearch: cognateSearch,
-    }
+	return &CognateHandler{
+		cognateSearch: cognateSearch,
+	}
 }
 
 // GetSuggestions handles prefix-based word suggestions
 func (h *CognateHandler) GetSuggestions(c *fiber.Ctx) error {
-    prefix := c.Query("prefix")
-    if prefix == "" {
-        return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-            "error": "prefix is required",
-        })
-    }
+	prefix := c.Query("prefix")
+	if prefix == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "prefix is required",
+		})
+	}
 
-    suggestions, err := h.cognateSearch.GetWordSuggestions(c.Context(), prefix)
-    if err != nil {
-        return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-            "error": err.Error(),
-        })
-    }
+	suggestions, err := h.cognateSearch.GetWordSuggestions(c.Context(), prefix)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
 
-    return c.JSON(fiber.Map{
-        "data": suggestions,
-    })
+	return c.JSON(fiber.Map{
+		"data": suggestions,
+	})
 }
 
 // GetByConceptID handles getting cognates by concept ID
 func (h *CognateHandler) GetByConceptID(c *fiber.Ctx) error {
-    conceptID := c.Params("id")
-    if conceptID == "" {
-        return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-            "error": "concept ID is required",
-        })
-    }
+	conceptID := c.Params("id")
+	if conceptID == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "concept ID is required",
+		})
+	}
 
-    cognates, err := h.cognateSearch.FindByConceptID(c.Context(), conceptID)
-    if err != nil {
-        return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-            "error": err.Error(),
-        })
-    }
+	cognates, err := h.cognateSearch.FindByConceptID(c.Context(), conceptID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
 
-    return c.JSON(fiber.Map{
-        "data": cognates,
-    })
+	return c.JSON(fiber.Map{
+		"data": cognates,
+	})
+}
+
+func (h *CognateHandler) FindCognateChains(c *fiber.Ctx) error {
+	conceptID := c.Params("id")
+	if conceptID == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "concept ID is required",
+		})
+	}
+
+	// Get optional word and language parameters
+	word := c.Query("word")
+	lang := c.Query("lang")
+
+	cognates, err := h.cognateSearch.FindCognateChains(c.Context(), conceptID, word, lang)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"data": cognates,
+	})
 }

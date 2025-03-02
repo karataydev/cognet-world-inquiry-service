@@ -1,2 +1,4 @@
 /bin
-CogNet-v2.0.tsv
+/CogNet-v2.0.tsv
+/languages.json
+/.DS_Store

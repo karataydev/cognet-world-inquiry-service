@@ -16,6 +16,7 @@ import (
 
 type DataImporter interface {
 	ImportFromReader(ctx context.Context, reader *bufio.Reader) error
+	ImportLanguages(ctx context.Context, reader *bufio.Reader) error
 	GetImportStatus() string
 	ClearDatabase(ctx context.Context) error
 }
@@ -42,6 +43,51 @@ func NewDataImporter(redisClient *redis.Client) DataImporter {
 		redisClient: redisClient,
 		status:      "ready",
 	}
+}
+
+func (d *dataImporter) ImportLanguages(ctx context.Context, reader *bufio.Reader) error {
+	d.status = "importing languages"
+	defer func() { d.status = "ready" }()
+
+	// Read all data from reader
+	data, err := io.ReadAll(reader)
+	if err != nil {
+		return fmt.Errorf("failed to read languages file: %w", err)
+	}
+
+	// Parse the JSON
+	var languages []model.LanguageInfo
+	if err := json.Unmarshal(data, &languages); err != nil {
+		return fmt.Errorf("failed to parse languages json: %w", err)
+	}
+
+	// Store in Redis
+	pipeline := d.redisClient.Pipeline()
+	for _, info := range languages {
+		jsonData, err := json.Marshal(info)
+		if err != nil {
+			return fmt.Errorf("failed to marshal language info: %w", err)
+		}
+		pipeline.Set(ctx, fmt.Sprintf("lang:%s", info.Code), jsonData, 0)
+	}
+
+	if _, err := pipeline.Exec(ctx); err != nil {
+		return fmt.Errorf("failed to store languages in redis: %w", err)
+	}
+
+	// Store metadata about language import
+	metadata := map[string]interface{}{
+		"total_languages": len(languages),
+		"status":          "completed",
+		"timestamp":       time.Now().Unix(),
+	}
+
+	metadataJSON, _ := json.Marshal(metadata)
+	if err := d.redisClient.Set(ctx, "import:languages:metadata", metadataJSON, 0).Err(); err != nil {
+		return fmt.Errorf("failed to store language import metadata: %w", err)
+	}
+
+	return nil
 }
 
 func (d *dataImporter) ImportFromReader(ctx context.Context, reader *bufio.Reader) error {
