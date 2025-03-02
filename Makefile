@@ -1,4 +1,4 @@
-PROJECT_NAME=$(notdir $(patsubst %/,%,$(CURDIR)))
+PROJECT_NAME=cognet-world-inquiry-service
 
 build:
 	@go build -o bin/$(PROJECT_NAME) ./cmd/$(PROJECT_NAME)
